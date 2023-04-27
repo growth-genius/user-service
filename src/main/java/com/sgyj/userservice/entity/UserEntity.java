@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Entity
@@ -30,6 +31,7 @@ public class UserEntity {
     @Column(nullable = false, unique = true)
     private String userId;
 
+    @CreatedDate
     private LocalDateTime createdAt;
 
     public static UserEntity from(UserDto userDto, BCryptPasswordEncoder passwordEncoder) {
@@ -38,7 +40,6 @@ public class UserEntity {
         user.encryptedPassword = passwordEncoder.encode(userDto.getPassword());
         user.email = userDto.getEmail();
         user.name = userDto.getName();
-        user.createdAt = LocalDateTime.now();
         return user;
     }
 

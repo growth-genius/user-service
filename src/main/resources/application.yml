@@ -20,7 +20,20 @@ eureka:
   instance:
     instance-id: ${spring.cloud.client.hostname}:${spring.application.instance_id:${random.value}}
   client:
-    register-with-eureka: true # eureka????? ?????? ??? ????? ??? ??? ??
+    register-with-eureka: true # eureka
     fetch-registry: true
     service-url:
       defaultZone: http://127.0.0.1:8761/eureka
+
+
+jwt:
+  token:
+    header: Authentication
+    issuer: sgyj
+    client-secret: Rel3Bjce2MajBo09qgkNgYaTuzvJe8iwnBFhsDS5
+    expiry-seconds: 300
+
+app:
+  host:
+    - http://localhost:8080
+    - http://127.0.0.1:8761
