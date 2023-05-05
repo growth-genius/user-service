@@ -40,7 +40,7 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
                     .build() );
             JwtAuthenticationToken authenticated =
                     new JwtAuthenticationToken(
-                            new JwtAuthentication(accountDto.getAccountId(), accountDto.getEmail()),
+                            new JwtAuthentication(accountDto.getId(), accountDto.getAccountId(), accountDto.getEmail()),
                             password,
                             authorities( accountDto.getRoles() )
                     );

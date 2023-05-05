@@ -21,7 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 public class AccountDto {
 
     /** 로그인 아이디 */
-    private Long accountId;
+    private Long id;
+
+    private String accountId;
 
     /** 이메일 */
     private String email;
@@ -55,12 +57,11 @@ public class AccountDto {
 
     public AccountDto(Account account) {
         copyProperties(account, this);
-        this.accountId = account.getId();
-
+        this.accountId = account.getAccountNo();
     }
 
     public void generateAccessToken ( Jwt jwt) {
-        Jwt.Claims claims = Jwt.Claims.of(accountId, email, roles.stream().map( AccountRole::name ).toArray(String[]::new));
+        Jwt.Claims claims = Jwt.Claims.of(id, accountId, email, roles.stream().map( AccountRole::name ).toArray(String[]::new));
         this.accessToken = jwt.createAccessToken( claims );
         this.refreshToken = jwt.createRefreshToken( claims );
     }

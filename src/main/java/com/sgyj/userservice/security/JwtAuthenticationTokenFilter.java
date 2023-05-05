@@ -42,12 +42,13 @@ public class JwtAuthenticationTokenFilter extends GenericFilterBean {
         if (authorizationToken != null) {
             try {
                 Jwt.Claims claims = verify(authorizationToken);
-                Long accountId = claims.accountId;
+                Long id = claims.id;
+                String accountId = claims.accountId;
                 String email = claims.email;
 
-                if(nonNull(accountId) && isNotEmpty(email) ) {
+                if(nonNull(id) && isNotEmpty(email) ) {
                     JwtAuthenticationToken authentication =
-                            new JwtAuthenticationToken(new JwtAuthentication(accountId, email),
+                            new JwtAuthenticationToken(new JwtAuthentication(id, accountId, email),
                                     null,
                                     authorities( claims )
                             );

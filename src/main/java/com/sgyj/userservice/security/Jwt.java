@@ -69,7 +69,8 @@ public final class Jwt {
 
     @Data
     public static class Claims {
-        Long accountId;
+        Long id;
+        String accountId;
         String email;
         String[] roles;
         Date iat;
@@ -78,9 +79,14 @@ public final class Jwt {
         private Claims() {/*empty*/}
 
         Claims( DecodedJWT decodedJWT) {
+            Claim idClaim = decodedJWT.getClaim(JwtInfo.ACCOUNT_ID.name());
+            if (!idClaim.isNull()) {
+                this.id = idClaim.asLong();
+            }
+
             Claim accountIdClaim = decodedJWT.getClaim(JwtInfo.ACCOUNT_ID.name());
             if (!accountIdClaim.isNull()) {
-                this.accountId = accountIdClaim.asLong();
+                this.accountId = accountIdClaim.asString();
             }
             Claim emailClaim = decodedJWT.getClaim(JwtInfo.EMAIL.name() );
             if (!emailClaim.isNull()) {
@@ -94,9 +100,10 @@ public final class Jwt {
             this.exp = decodedJWT.getExpiresAt();
         }
 
-        public static Claims of(long userKey, String name, String[] roles) {
+        public static Claims of(long userKey, String accountId, String name, String[] roles) {
             Claims claims = new Claims();
-            claims.accountId = userKey;
+            claims.id = userKey;
+            claims.accountId = accountId;
             claims.email = name;
             claims.roles = roles;
             return claims;

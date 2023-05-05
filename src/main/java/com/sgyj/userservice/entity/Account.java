@@ -21,13 +21,11 @@ import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.ws.rs.BadRequestException;
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.Hibernate;
 import org.hibernate.annotations.ColumnDefault;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -47,6 +45,8 @@ public class Account extends UpdatedEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="account_id")
     private Long id;
+
+    private String accountNo;
 
     @Column(unique = true)
     private String email;
@@ -118,7 +118,7 @@ public class Account extends UpdatedEntity {
 
     /* 이메일 인증 토큰 세팅 */
     public void generateEmailToken ( Jwt jwt ) {
-        Jwt.Claims claims = Jwt.Claims.of(this.id, this.email, this.roles.stream().map( AccountRole::name ).toArray(String[]::new));
+        Jwt.Claims claims = Jwt.Claims.of(this.id, this.accountNo, this.email, this.roles.stream().map( AccountRole::name ).toArray(String[]::new));
         this.emailCheckToken = jwt.createEmailToken(claims);
     }
 
@@ -143,16 +143,4 @@ public class Account extends UpdatedEntity {
         this.profileImage = profileImage;
     }
 
-    @Override
-    public boolean equals ( Object o ) {
-        if ( this == o ) return true;
-        if ( o == null || Hibernate.getClass( this ) != Hibernate.getClass( o ) ) return false;
-        Account account = ( Account ) o;
-        return Objects.equals( id, account.id );
-    }
-
-    @Override
-    public int hashCode () {
-        return 0;
-    }
 }

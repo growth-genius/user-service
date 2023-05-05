@@ -13,6 +13,7 @@ import com.sgyj.userservice.repository.AccountRepository;
 import com.sgyj.userservice.security.Jwt;
 import com.sgyj.userservice.security.JwtAuthentication;
 import jakarta.ws.rs.BadRequestException;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -34,6 +35,7 @@ public class AccountService {
 
     private Account saveAccount( SignUpForm signUpForm) {
         Account account = Account.builder()
+                .accountNo(UUID.randomUUID().toString())
                 .email( signUpForm.getEmail() )
                 .userName( signUpForm.getUserName() )
                 .password( passwordEncoder.encode( signUpForm.getPassword() ) )
@@ -79,7 +81,7 @@ public class AccountService {
      * @param passwordForm : 변경할 비밀번호 정보
      */
     public void changePassword ( JwtAuthentication authentication, PasswordForm passwordForm ) {
-        Account originAccount = accountRepository.findById( authentication.accountId() ).orElseThrow();
+        Account originAccount = accountRepository.findById( authentication.id() ).orElseThrow();
         if( !this.passwordEncoder.matches(passwordForm.getOriginPassword(), originAccount.getPassword() ) ) {
             throw new BadRequestException("기존 비밀번호가 일치하지 않습니다.");
         }
@@ -112,7 +114,7 @@ public class AccountService {
      * @param authentication : 로그인 사용자
      */
     public String changeProfileImage ( ProfileImageForm profileImageForm, JwtAuthentication authentication ) {
-        Account account = accountRepository.findById( authentication.accountId() ).orElseThrow( NoMemberException::new);
+        Account account = accountRepository.findById( authentication.id() ).orElseThrow( NoMemberException::new);
         account.changeProfileImage( profileImageForm.getProfileImage() );
         return account.getProfileImage();
     }
