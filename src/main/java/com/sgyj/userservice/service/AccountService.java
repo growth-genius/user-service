@@ -29,8 +29,7 @@ public class AccountService {
     private final Jwt jwt;
 
     public Account processNewAccount ( SignUpForm signUpForm ) {
-        Account account = saveAccount( signUpForm );
-        return account;
+        return saveAccount( signUpForm );
     }
 
     private Account saveAccount( SignUpForm signUpForm) {

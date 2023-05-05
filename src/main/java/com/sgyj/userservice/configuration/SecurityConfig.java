@@ -60,50 +60,24 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain ( HttpSecurity http ) throws Exception {
+        http.csrf().disable()
+                .authorizeHttpRequests().requestMatchers( "/**" ).permitAll();
         http
-            .httpBasic()
-                    .disable()                                              // rest api 이므로 기본설정 사용안함. 기본설정은 비인증시 로그인폼 화면으로 리다이렉트 된다.
-                .csrf()
-                    .disable()                                              // rest api 이므로 csrf 보안이 필요없으므로 disable 처리.
-                .exceptionHandling()
-                .accessDeniedHandler( accessDeniedHandler )
-                .authenticationEntryPoint( unauthorizedHandler )
-            .and()
-                .headers()
-                .frameOptions()
-                .sameOrigin()
-            .and()
-                .sessionManagement()
-                .sessionCreationPolicy( SessionCreationPolicy.STATELESS ) // jwt token 으로 인증하므로 세션은 필요없으므로 생성안함.
-            .and()
-                .cors()
-                    .configurationSource( corsConfigurationSource())
-            .and()
-                .authorizeHttpRequests()
-                .requestMatchers( "/*",
-                          "/user/oauth2/callback/**",
-                          "/h2-console/**",
-                          "/account/refresh-token/**",
-                          "/account/sign-up"
-                )
-                    .permitAll()
-                .requestMatchers( HttpMethod.GET, "/account/profile/*" )
-                    .permitAll()
-                .requestMatchers( "/user/**" )
-                    .hasRole( "USER" )
-                .requestMatchers( "/v2/api-docs", "/swagger-resources/**", "/swagger-ui.html", "/webjars/**", "/swagger/**" )
-                    .permitAll()
+            .cors()
+                .configurationSource(corsConfigurationSource())
             .and()
                 .addFilterBefore( jwtAuthenticationTokenFilter(), UsernamePasswordAuthenticationFilter.class );
+        http.headers().frameOptions().disable();
         return http.build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource () {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins( appProperties.getHosts() );
         config.setAllowedMethods( Arrays.stream(HttpMethod.values()).map( HttpMethod::name ).toList() );
-        config.setExposedHeaders( List.of( "Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "strict-origin-when-cross-origin" ) );
+        config.setExposedHeaders( List.of( "Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "strict-origin-when-cross-origin", "Authentication" ) );
         config.setAllowedHeaders( List.of( "*" ) );
         config.setAllowCredentials( true );
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -5,15 +5,24 @@ import static jakarta.persistence.FetchType.LAZY;
 import com.sgyj.userservice.common.UpdatedEntity;
 import com.sgyj.userservice.enums.AccountRole;
 import com.sgyj.userservice.security.Jwt;
+import jakarta.persistence.Basic;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.ws.rs.BadRequestException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,7 +36,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Builder
 @AllArgsConstructor @NoArgsConstructor
 @NamedEntityGraph(
-        name ="Account.withAccountRolesAndEmployee",
+        name ="Account.withAccountRoles",
         attributeNodes = {
                 @NamedAttributeNode( "roles" )
         }
@@ -88,8 +97,6 @@ public class Account extends UpdatedEntity {
         if (!passwordEncoder.matches(credentials, this.password)) {
             this.loginFailCount++;
             throw new BadRequestException( "" );
-        } else if(!this.emailVerified) {
-            throw new BadRequestException("" );
         }
     }
 

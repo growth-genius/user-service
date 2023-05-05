@@ -38,33 +38,27 @@ public class JwtAuthenticationTokenFilter extends GenericFilterBean {
             throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            String authorizationToken = obtainAuthorizationToken(request);
-            if (authorizationToken != null) {
-                try {
-                    Jwt.Claims claims = verify(authorizationToken);
-                    Long accountId = claims.accountId;
-                    String email = claims.email;
+        String authorizationToken = obtainAuthorizationToken(request);
+        if (authorizationToken != null) {
+            try {
+                Jwt.Claims claims = verify(authorizationToken);
+                Long accountId = claims.accountId;
+                String email = claims.email;
 
-                    if(nonNull(accountId) && isNotEmpty(email) ) {
-                        JwtAuthenticationToken authentication =
-                                new JwtAuthenticationToken(new JwtAuthentication(accountId, email),
-                                        null,
-                                        authorities( claims )
-                                );
-                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                    }
-
-                } catch (Exception e) {
-                    log.error("Jwt processing failed: {}", e.getMessage());
+                if(nonNull(accountId) && isNotEmpty(email) ) {
+                    JwtAuthenticationToken authentication =
+                            new JwtAuthenticationToken(new JwtAuthentication(accountId, email),
+                                    null,
+                                    authorities( claims )
+                            );
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-            }
-        } else {
-            log.debug("SecurityContextHolder not populated with security token, as it already contained: '{}'",
-                    SecurityContextHolder.getContext().getAuthentication());
-        }
 
+            } catch (Exception e) {
+                log.error("Jwt processing failed: {}", e.getMessage());
+            }
+        }
         chain.doFilter(request, response);
     }
 

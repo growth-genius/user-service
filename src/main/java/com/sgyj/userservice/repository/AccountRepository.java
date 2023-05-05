@@ -8,11 +8,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Transactional(readOnly = true)
 public interface AccountRepository extends JpaRepository<Account, Long>, AccountRepositoryQuerydsl {
+
     Optional<Account> findByUserName ( String nickname );
 
-    @EntityGraph("Account.withAccountRolesAndEmployee")
+    @EntityGraph("Account.withAccountRoles")
     Optional<Account> findByEmail ( String email );
 
     boolean existsByEmail ( String email );
+
 
 }

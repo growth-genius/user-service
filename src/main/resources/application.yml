@@ -15,6 +15,11 @@ spring:
     url: jdbc:h2:mem:user-service
     username: sa
     password:
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
 
 eureka:
   instance:
@@ -25,15 +30,22 @@ eureka:
     service-url:
       defaultZone: http://127.0.0.1:8761/eureka
 
-
-jwt:
-  token:
-    header: Authentication
-    issuer: sgyj
-    client-secret: Rel3Bjce2MajBo09qgkNgYaTuzvJe8iwnBFhsDS5
-    expiry-seconds: 300
-
 app:
   host:
-    - http://localhost:8080
+    - http://127.0.0.1:8000
+    - http://127.0.0.1:8888
     - http://127.0.0.1:8761
+logging:
+  level:
+    com.example.userservice: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - refresh
+          - health
+          - beans
+          - httptrace
+          - busrefresh

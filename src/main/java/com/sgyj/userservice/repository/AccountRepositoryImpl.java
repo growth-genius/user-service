@@ -9,5 +9,4 @@ public class AccountRepositoryImpl extends Querydsl4RepositorySupport implements
         super( Account.class);
     }
 
-
 }
