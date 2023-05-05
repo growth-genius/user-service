@@ -53,7 +53,7 @@ public class AccountService {
     public AccountDto login (LoginForm loginForm ) {
         Account account = accountRepository.findByEmail( loginForm.getEmail() ).orElseThrow(NoMemberException::new);
         account.login( passwordEncoder, loginForm.getPassword() );
-        AccountDto accountDto = new AccountDto(account);
+        AccountDto accountDto = AccountDto.from(account);
         account.afterLoginSuccess();
         // 화면 전송용 토큰 세팅
         accountDto.generateAccessToken(jwt);
@@ -96,7 +96,7 @@ public class AccountService {
         if ( jwt.validateToken( tokenDto.getRefreshToken() ) ) {
             Jwt.Claims claims = jwt.verify( tokenDto.getRefreshToken() );
             Account account = accountRepository.findByEmail( claims.getEmail() ).orElseThrow();
-            AccountDto accountDto = new AccountDto(account);
+            AccountDto accountDto = AccountDto.from(account);
             accountDto.generateAccessToken( jwt );
             tokenDto = TokenDto.builder()
                     .accessToken( accountDto.getAccessToken() )
@@ -117,6 +117,11 @@ public class AccountService {
         Account account = accountRepository.findById( authentication.id() ).orElseThrow( NoMemberException::new);
         account.changeProfileImage( profileImageForm.getProfileImage() );
         return account.getProfileImage();
+    }
+
+    public AccountDto getAccountByAccountId( String accountId ) {
+        Account account = accountRepository.findByAccountNo(accountId).orElseThrow(NoMemberException::new);
+        return AccountDto.from(account);
     }
 
 }

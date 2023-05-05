@@ -35,34 +35,35 @@ public class AccountController {
 
 
     @InitBinder("signUpForm")
-    public void initBinder( WebDataBinder webDataBinder ) {
-        webDataBinder.addValidators( signUpFormValidator );
+    public void initBinder(WebDataBinder webDataBinder) {
+        webDataBinder.addValidators(signUpFormValidator);
     }
 
     /**
      * 회원가입
+     *
      * @param signUpForm : 회원가입 폼
      * @return AccountDto
      */
     @PostMapping("/sign-up")
-    public ApiResult<AccountDto> signUp(@Valid @RequestBody SignUpForm signUpForm ) {
-        return success( new AccountDto(accountService.processNewAccount( signUpForm )));
+    public ApiResult<AccountDto> signUp(@Valid @RequestBody SignUpForm signUpForm) {
+        return success(AccountDto.from(accountService.processNewAccount(signUpForm)));
     }
 
     /**
      * 로그인
+     *
      * @param loginForm : 로그인 폼
      * @return AccountDto
      */
-    @PostMapping( "/sign-in" )
-    public ApiResult<AccountDto> signIn ( @Valid @RequestBody LoginForm loginForm ) {
-        return success( (AccountDto) authenticationManager.authenticate( new JwtAuthenticationToken( loginForm.getEmail(), loginForm.getPassword() ) )
-                                                     .getDetails() );
+    @PostMapping("/sign-in")
+    public ApiResult<AccountDto> signIn(@Valid @RequestBody LoginForm loginForm) {
+        return success((AccountDto) authenticationManager.authenticate(new JwtAuthenticationToken(loginForm.getEmail(), loginForm.getPassword())).getDetails());
     }
 
     @GetMapping("/check-email-token/{token}/{email}")
-    public ApiUtil.ApiResult<Boolean> checkEmailToken( @PathVariable String token, @PathVariable String email) {
-        return success( accountService.checkEmailToken( token, email ), "이메일 인증에 성공하였습니다. 로그인을 진행해 주세요." );
+    public ApiUtil.ApiResult<Boolean> checkEmailToken(@PathVariable String token, @PathVariable String email) {
+        return success(accountService.checkEmailToken(token, email), "이메일 인증에 성공하였습니다. 로그인을 진행해 주세요.");
     }
 
 }

@@ -7,6 +7,7 @@ import com.sgyj.userservice.enums.AccountRole;
 import com.sgyj.userservice.security.Jwt;
 import java.time.LocalDateTime;
 import java.util.Set;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Slf4j
 public class AccountDto {
 
@@ -55,9 +56,13 @@ public class AccountDto {
 
     private boolean superAdmin;
 
-    public AccountDto(Account account) {
+    private AccountDto(Account account) {
         copyProperties(account, this);
         this.accountId = account.getAccountNo();
+    }
+
+    public static AccountDto from(Account account) {
+        return new AccountDto(account);
     }
 
     public void generateAccessToken ( Jwt jwt) {
