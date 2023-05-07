@@ -1,4 +1,4 @@
-package com.sgyj.userservice.configuration;
+package com.sgyj.userservice.config;
 
 import com.sgyj.userservice.security.JwtAuthentication;
 import com.sgyj.userservice.security.JwtAuthenticationToken;
@@ -13,17 +13,17 @@ import org.springframework.stereotype.Component;
 public class LoginAccountAuditorAware implements AuditorAware<Long> {
 
     @Override
-    public Optional<Long> getCurrentAuditor () {
+    public Optional<Long> getCurrentAuditor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if ( authentication == null || !authentication.isAuthenticated() ) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             return Optional.empty();
         }
-        if ( authentication instanceof AnonymousAuthenticationToken ) {
+        if (authentication instanceof AnonymousAuthenticationToken) {
             return Optional.empty();
         }
         JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) authentication;
         JwtAuthentication jwtAuthentication = (JwtAuthentication) authenticationToken.getPrincipal();
-        return Optional.of( jwtAuthentication.id() );
+        return Optional.of(jwtAuthentication.id());
     }
 
 }

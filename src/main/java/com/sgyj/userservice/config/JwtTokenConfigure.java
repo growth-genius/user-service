@@ -1,4 +1,4 @@
-package com.sgyj.userservice.configuration;
+package com.sgyj.userservice.config;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,12 +21,8 @@ public class JwtTokenConfigure {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-                .append("header", header)
-                .append("issuer", issuer)
-                .append("clientSecret", clientSecret)
-                .append("expirySeconds", expirySeconds)
-                .toString();
+        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE).append("header", header).append("issuer", issuer)
+            .append("clientSecret", clientSecret).append("expirySeconds", expirySeconds).toString();
     }
 
 }

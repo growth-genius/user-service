@@ -1,4 +1,4 @@
-package com.sgyj.userservice.configuration;
+package com.sgyj.userservice.config;
 
 import com.sgyj.userservice.properties.AppProperties;
 import com.sgyj.userservice.security.EntryPointUnauthorizedHandler;
@@ -18,7 +18,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -44,49 +43,45 @@ public class SecurityConfig {
     private final AppProperties appProperties;
 
     @Bean
-    public PasswordEncoder passwordEncoder () {
+    public PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
     @Bean
-    public JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter () {
-        return new JwtAuthenticationTokenFilter( jwtTokenConfigure.getHeader(), jwt );
+    public JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter() {
+        return new JwtAuthenticationTokenFilter(jwtTokenConfigure.getHeader(), jwt);
     }
 
     @Bean
-    public JwtAuthenticationProvider jwtAuthenticationProvider ( AccountService accountService ) {
-        return new JwtAuthenticationProvider( accountService );
+    public JwtAuthenticationProvider jwtAuthenticationProvider(AccountService accountService) {
+        return new JwtAuthenticationProvider(accountService);
     }
 
     @Bean
-    public SecurityFilterChain filterChain ( HttpSecurity http ) throws Exception {
-        http.csrf().disable()
-                .authorizeHttpRequests().requestMatchers( "/**" ).permitAll();
-        http
-            .cors()
-                .configurationSource(corsConfigurationSource())
-            .and()
-                .addFilterBefore( jwtAuthenticationTokenFilter(), UsernamePasswordAuthenticationFilter.class );
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.csrf().disable().authorizeHttpRequests().requestMatchers("/**").permitAll();
+        http.cors().configurationSource(corsConfigurationSource()).and()
+            .addFilterBefore(jwtAuthenticationTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         http.headers().frameOptions().disable();
         return http.build();
     }
 
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource () {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins( appProperties.getHosts() );
-        config.setAllowedMethods( Arrays.stream(HttpMethod.values()).map( HttpMethod::name ).toList() );
-        config.setExposedHeaders( List.of( "Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "strict-origin-when-cross-origin", "Authentication" ) );
-        config.setAllowedHeaders( List.of( "*" ) );
-        config.setAllowCredentials( true );
+        config.setAllowedOrigins(appProperties.getHosts());
+        config.setAllowedMethods(Arrays.stream(HttpMethod.values()).map(HttpMethod::name).toList());
+        config.setExposedHeaders(List.of("Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "strict-origin-when-cross-origin", "Authentication"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration( "/**", config );
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager ( AuthenticationConfiguration authenticationConfiguration ) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 

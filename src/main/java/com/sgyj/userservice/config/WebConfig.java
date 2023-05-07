@@ -1,4 +1,4 @@
-package com.sgyj.userservice.configuration;
+package com.sgyj.userservice.config;
 
 import com.sgyj.userservice.interceptor.RequestLogInterceptor;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +14,8 @@ public class WebConfig implements WebMvcConfigurer {
     private final RequestLogInterceptor requestLogInterceptor;
 
     @Override
-    public void addInterceptors ( InterceptorRegistry registry ) {
-        registry.addInterceptor( requestLogInterceptor );
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(requestLogInterceptor);
     }
 
 
