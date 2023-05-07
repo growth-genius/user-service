@@ -11,6 +11,7 @@ import com.sgyj.userservice.service.AccountService;
 import com.sgyj.userservice.utils.ApiUtil;
 import com.sgyj.userservice.utils.ApiUtil.ApiResult;
 import com.sgyj.userservice.validator.SignUpFormValidator;
+import io.micrometer.core.annotation.Timed;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,7 @@ public class AccountController {
      * @return AccountDto
      */
     @PostMapping("/sign-up")
+    @Timed(value = "account.signUp", longTask = true)
     public ApiResult<AccountDto> signUp(@Valid @RequestBody SignUpForm signUpForm) {
         return success(AccountDto.from(accountService.processNewAccount(signUpForm)));
     }

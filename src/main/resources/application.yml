@@ -45,3 +45,5 @@ management:
           - beans
           - httptrace
           - busrefresh
+          - metrics
+          - prometheus
