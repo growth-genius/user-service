@@ -1,0 +1,49 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: user-service
+  h2:
+    console:
+      enabled: true
+      settings:
+        web-allow-others: true
+      path: /h2-console
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
+
+eureka:
+  instance:
+    instance-id: ${spring.cloud.client.hostname}:${spring.application.instance_id:${random.value}}
+  client:
+    register-with-eureka: true # eureka
+    fetch-registry: true
+    service-url:
+      defaultZone: http://127.0.0.1:8761/eureka
+
+app:
+  host:
+    - http://127.0.0.1:8000
+    - http://127.0.0.1:8888
+    - http://127.0.0.1:8761
+logging:
+  level:
+    com.example.userservice: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - info
+          - refresh
+          - health
+          - beans
+          - httptrace
+          - busrefresh
+          - metrics
+          - prometheus
