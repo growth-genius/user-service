@@ -2,11 +2,11 @@ server:
   port: 0
 
 spring:
-  application:
-    name: user-service
   profiles:
     activate:
       on-profile: dev
+  application:
+    name: user-service
   h2:
     console:
       enabled: true
