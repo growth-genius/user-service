@@ -1,5 +1,8 @@
 spring:
   cloud:
     config:
-      uri: http://127.0.0.1:8888
+      uri: http://config-service:8888
       name: user-service, ecommerce
+  profiles:
+    activate:
+      on-profile: dev
