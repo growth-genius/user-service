@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: user-service
+  profiles:
+    activate:
+      on-profile: dev
   h2:
     console:
       enabled: true
@@ -11,7 +14,7 @@ spring:
         web-allow-others: true
       path: /h2-console
   rabbitmq:
-    host: 127.0.0.1
+    host: rabbitmq
     port: 5672
     username: guest
     password: guest
@@ -23,13 +26,13 @@ eureka:
     register-with-eureka: true # eureka
     fetch-registry: true
     service-url:
-      defaultZone: http://127.0.0.1:8761/eureka
+      defaultZone: http://tgather:8761/eureka
 
 app:
   host:
-    - http://127.0.0.1:8000
-    - http://127.0.0.1:8888
-    - http://127.0.0.1:8761
+    - http://gateway-service:8000
+    - http://config-service:8888
+    - http://tgather:8761
 logging:
   level:
     com.example.userservice: DEBUG
