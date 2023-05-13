@@ -7,17 +7,13 @@ spring:
       on-profile: dev
   application:
     name: user-service
+
   h2:
     console:
       enabled: true
       settings:
         web-allow-others: true
       path: /h2-console
-  rabbitmq:
-    host: rabbitmq
-    port: 5672
-    username: guest
-    password: guest
 
 eureka:
   instance:

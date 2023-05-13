@@ -10,11 +10,6 @@ spring:
       settings:
         web-allow-others: true
       path: /h2-console
-  rabbitmq:
-    host: 127.0.0.1
-    port: 5672
-    username: guest
-    password: guest
 
 eureka:
   instance:
