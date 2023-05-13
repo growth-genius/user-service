@@ -36,7 +36,8 @@ node {
             sh(script: "docker stop ${IMAGE_NAME} || true")
             sh(script: "docker rm ${IMAGE_NAME} || true")
             sh(script: "docker rmi ${IMAGE_NAME} || true")
-            sh(script:"docker run --network ${DOCKER_NETWORK} -m 12g -e jasypt.encryptor.password=${DJASYPT_PASSWORD} --env JAVA_OPTS='-Dspring.profiles.active=${SPRING_PROFILE} -Dfile.encoding=UTF-8 -Xmx8192m -XX:MaxMetaspaceSize=1024m' --user root -d -e TZ=Asia/Seoul --name ${IMAGE_NAME} ${DOCKER_HUB_USER}/${IMAGE_NAME}:latest")
+            // sh(script:"docker run --network ${DOCKER_NETWORK} -m 12g -e jasypt.encryptor.password=${DJASYPT_PASSWORD} --env JAVA_OPTS='-Dspring.profiles.active=${SPRING_PROFILE} -Dfile.encoding=UTF-8 -Xmx8192m -XX:MaxMetaspaceSize=1024m' --user root -d -e TZ=Asia/Seoul --name ${IMAGE_NAME} ${DOCKER_HUB_USER}/${IMAGE_NAME}:latest")
+            sh(script:"docker run --network tgather-network -m 12g --env JAVA_OPTS='-Dspring.profiles.active=dev -Dfile.encoding=UTF-8 -Xmx8192m -XX:MaxMetaspaceSize=1024m' -d --name user-service leesg107/user-service")
         }
 
     } catch(e) {
