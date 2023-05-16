@@ -6,7 +6,7 @@ spring:
     activate:
       on-profile: default
   application:
-    name: user-service
+    name: account-service
   h2:
     console:
       enabled: true

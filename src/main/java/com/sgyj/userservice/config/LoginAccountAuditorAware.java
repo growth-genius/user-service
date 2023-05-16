@@ -3,6 +3,7 @@ package com.sgyj.userservice.config;
 import com.sgyj.userservice.security.JwtAuthentication;
 import com.sgyj.userservice.security.JwtAuthenticationToken;
 import java.util.Optional;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -10,10 +11,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Component
-public class LoginAccountAuditorAware implements AuditorAware<Long> {
+public class LoginAccountAuditorAware implements AuditorAware<String> {
 
+    @NotNull
     @Override
-    public Optional<Long> getCurrentAuditor() {
+    public Optional<String> getCurrentAuditor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return Optional.empty();
