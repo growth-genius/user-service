@@ -1,44 +1,49 @@
 package com.sgyj.userservice.security;
 
+import java.util.Collection;
 import lombok.EqualsAndHashCode;
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
+import lombok.ToString;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 
-import java.util.Collection;
-
-@EqualsAndHashCode(callSuper = false)
+@ToString
+@EqualsAndHashCode(callSuper = true)
 public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 
     private final transient Object principal;
 
-    private String credentials;
+    private transient CredentialInfo credential;
 
-    public JwtAuthenticationToken( String principal, String credentials) {
-        super(null);
-        super.setAuthenticated(false);
-
-        this.principal = principal;
-        this.credentials = credentials;
-    }
-
-    public JwtAuthenticationToken(Object principal, String credentials, Collection<? extends GrantedAuthority> authorities) {
+    /**
+     * Creates a token with the supplied array of authorities.
+     *
+     * @param authorities the collection of <tt>GrantedAuthority</tt>s for the principal
+     *                    represented by this authentication object.
+     * @param principal
+     * @param credential
+     */
+    public JwtAuthenticationToken(Object principal, CredentialInfo credential, Collection<? extends GrantedAuthority> authorities) {
         super(authorities);
         super.setAuthenticated(true);
-
         this.principal = principal;
-        this.credentials = credentials;
+        this.credential = credential;
+    }
+
+    public JwtAuthenticationToken(String principal, CredentialInfo credential) {
+        super(null);
+        super.setAuthenticated(false);
+        this.principal = principal;
+        this.credential = credential;
+    }
+
+    @Override
+    public CredentialInfo getCredentials() {
+        return credential;
     }
 
     @Override
     public Object getPrincipal() {
         return principal;
-    }
-
-    @Override
-    public String getCredentials() {
-        return credentials;
     }
 
     @Override
@@ -52,15 +57,6 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
     @Override
     public void eraseCredentials() {
         super.eraseCredentials();
-        credentials = null;
+        credential = null;
     }
-
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-                .append("principal", principal)
-                .append("credentials", "[PROTECTED]")
-                .toString();
-    }
-
 }

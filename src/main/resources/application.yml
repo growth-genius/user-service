@@ -2,6 +2,9 @@ server:
   port: 0
 
 spring:
+  profiles:
+    activate:
+      on-profile: default
   application:
     name: user-service
   h2:
@@ -27,18 +30,8 @@ app:
     - http://127.0.0.1:8761
 logging:
   level:
-    com.example.userservice: DEBUG
+    com.sgyj.userservice: DEBUG
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include:
-          - info
-          - refresh
-          - health
-          - beans
-          - httptrace
-          - busrefresh
-          - metrics
-          - prometheus
+
+kafka:
+  bootstrap-servers-config: 172.0.0.1:9092

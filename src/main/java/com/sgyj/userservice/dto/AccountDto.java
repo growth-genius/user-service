@@ -1,74 +1,77 @@
 package com.sgyj.userservice.dto;
 
-import static org.springframework.beans.BeanUtils.copyProperties;
-
 import com.sgyj.userservice.entity.Account;
 import com.sgyj.userservice.enums.AccountRole;
+import com.sgyj.userservice.enums.LoginType;
+import com.sgyj.userservice.enums.TravelTheme;
 import com.sgyj.userservice.security.Jwt;
 import java.time.LocalDateTime;
 import java.util.Set;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Slf4j
 public class AccountDto {
 
     /** 로그인 아이디 */
-    private Long id;
-
-    private String accountId;
-
+    private Long accountId;
+    /** 고유 식별자 */
+    private String uuid;
     /** 이메일 */
     private String email;
-
     /** 사용자 이름 */
     private String userName;
-
+    /* 사용자 별명 */
+    private String nickname;
+    /* 패스워드*/
+    private String password;
     /** 가입일자 */
     private LocalDateTime joinedAt;
-
     /** 권한 */
     private Set<AccountRole> roles;
-
     /** 로그인 횟수 */
     private int loginCount;
-
     /** 마지막 로그인 일자 */
     private LocalDateTime lastLoginAt;
 
-    private String accessToken;
-
-    private String refreshToken;
-
     private String profileImage;
+    private LoginType loginType;
+    private String accessToken;
+    private String refreshToken;
+    /* 나이 */
+    private int age;
 
-    private String position;
+    private int birth;
+    private Set<TravelTheme> travelThemes;
 
-    private String departmentName;
+    AccountDto(Account account) {
+        this.accountId = account.getId();
+        this.uuid = account.getUuid();
+        this.userName = account.getUsername();
+        this.nickname = account.getNickname();
+        this.email = account.getEmail();
+        this.loginType = account.getLoginType();
+        this.roles = account.getRoles();
+        this.age = account.getAge();
+        this.birth = account.getBirth();
+        this.travelThemes = account.getTravelThemes();
+        this.profileImage = account.getProfileImage();
+        this.joinedAt = account.getJoinedAt();
 
-    private boolean superAdmin;
-
-    private AccountDto(Account account) {
-        copyProperties(account, this);
-        this.accountId = account.getAccountNo();
     }
 
     public static AccountDto from(Account account) {
         return new AccountDto(account);
     }
 
-    public void generateAccessToken ( Jwt jwt) {
-        Jwt.Claims claims = Jwt.Claims.of(id, accountId, email, roles.stream().map( AccountRole::name ).toArray(String[]::new));
-        this.accessToken = jwt.createAccessToken( claims );
-        this.refreshToken = jwt.createRefreshToken( claims );
+    public static AccountDto createByAccountAndGenerateAccessToken(Account account, Jwt jwt) {
+        AccountDto accountDTO = new AccountDto(account);
+        accountDTO.generateAccessToken(jwt);
+        return accountDTO;
     }
 
+    public void generateAccessToken(Jwt jwt) {
+        Jwt.Claims claims = Jwt.Claims.of(accountId, email, roles.stream().map(AccountRole::name).toArray(String[]::new));
+        this.accessToken = jwt.createAccessToken(claims);
+        this.refreshToken = jwt.createRefreshToken(claims);
+    }
 }

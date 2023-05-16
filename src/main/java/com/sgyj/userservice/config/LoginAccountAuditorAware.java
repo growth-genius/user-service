@@ -23,7 +23,7 @@ public class LoginAccountAuditorAware implements AuditorAware<Long> {
         }
         JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) authentication;
         JwtAuthentication jwtAuthentication = (JwtAuthentication) authenticationToken.getPrincipal();
-        return Optional.of(jwtAuthentication.id());
+        return Optional.of(jwtAuthentication.accountId());
     }
 
 }

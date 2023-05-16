@@ -1,24 +1,27 @@
 package com.sgyj.userservice.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sgyj.userservice.annotations.BaseServiceAnnotation;
 import com.sgyj.userservice.dto.AccountDto;
 import com.sgyj.userservice.dto.TokenDto;
+import com.sgyj.userservice.dto.kafka.EmailMessage;
 import com.sgyj.userservice.entity.Account;
+import com.sgyj.userservice.enums.LoginType;
 import com.sgyj.userservice.exception.ExpiredTokenException;
-import com.sgyj.userservice.exception.NoMemberException;
-import com.sgyj.userservice.form.LoginForm;
-import com.sgyj.userservice.form.PasswordForm;
-import com.sgyj.userservice.form.ProfileImageForm;
-import com.sgyj.userservice.form.SignUpForm;
+import com.sgyj.userservice.form.AccountSaveForm;
+import com.sgyj.userservice.form.AuthCodeForm;
+import com.sgyj.userservice.properties.KafkaUserTopicProperties;
 import com.sgyj.userservice.repository.AccountRepository;
+import com.sgyj.userservice.security.CredentialInfo;
 import com.sgyj.userservice.security.Jwt;
-import com.sgyj.userservice.security.JwtAuthentication;
-import jakarta.ws.rs.BadRequestException;
-import java.util.UUID;
+import com.sgyj.userservice.security.Jwt.Claims;
+import com.sgyj.userservice.service.kafka.KafkaAccountProducer;
+import com.sgyj.userservice.service.kafka.KafkaEmailProducer;
+import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.apache.commons.lang.RandomStringUtils;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 
@@ -27,102 +30,118 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @RequiredArgsConstructor
 public class AccountService {
 
-    private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AccountRepository accountRepository;
+    private final KafkaEmailProducer kafkaEmailProducer;
+    private final KafkaUserTopicProperties kafkaUserTopicProperties;
     private final Jwt jwt;
-    private final CircuitBreakerFactory circuitBreakerFactory;
-
-    public Account processNewAccount(SignUpForm signUpForm) {
-        return saveAccount(signUpForm);
-    }
-
-    private Account saveAccount(SignUpForm signUpForm) {
-        Account account = Account.builder().accountNo(UUID.randomUUID().toString()).email(signUpForm.getEmail()).userName(signUpForm.getUserName())
-            .password(passwordEncoder.encode(signUpForm.getPassword())).build();
-        // 권한 설정
-        account.setUserRole(signUpForm.isAdmin());
-        return accountRepository.save(account);
-    }
+    private final KafkaAccountProducer kafkaAccountProducer;
 
     /**
-     * 로그인
+     * 회원가입
      *
-     * @param loginForm : 로그인 정보
-     * @return AccountDto
+     * @param accountSaveForm account 저장 폼
+     * @return AccountDto account 생성 결과 Dto
      */
-    public AccountDto login(LoginForm loginForm) {
-        Account account = accountRepository.findByEmail(loginForm.getEmail()).orElseThrow(NoMemberException::new);
-        account.login(passwordEncoder, loginForm.getPassword());
+    public AccountDto saveAccount(AccountSaveForm accountSaveForm) throws JsonProcessingException {
+        accountSaveForm.setPassword(passwordEncoder.encode(accountSaveForm.getPassword()));
+        validateAccount(accountSaveForm);
+
+        String authCode = sendSignUpConfirmEmail(accountSaveForm.getEmail());
+        Account account = Account.createAccountByFormAndAuthCode(accountSaveForm, authCode);
+        // accountRepository.save(account);
         AccountDto accountDto = AccountDto.from(account);
-        account.afterLoginSuccess();
-        // 화면 전송용 토큰 세팅
-        accountDto.generateAccessToken(jwt);
+        log.error("topic ::: {}", kafkaUserTopicProperties.getAccountTopic());
+        kafkaAccountProducer.send(kafkaUserTopicProperties.getAccountTopic(), accountDto);
         return accountDto;
     }
 
     /**
-     * 가입 이메일 체크
+     * 이메일 인증코드 전송
      *
-     * @param token : 토큰
-     * @param email : 이메일
-     * @return Boolean : 이메일 체크 여부
+     * @param email 이메일
+     * @return authCode 인증코드
      */
-    public boolean checkEmailToken(String token, String email) {
-        Account account = accountRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("해당 이메일로 가입된 사용자가 없습니다."));
-        if (!account.isValidEmailToken(jwt, token)) {
-            throw new BadRequestException("유효하지 않은 토큰입니다.");
-        }
-        account.completeSignUp();
-        return true;
+    private String sendSignUpConfirmEmail(String email) throws JsonProcessingException {
+        String authCode = RandomStringUtils.randomAlphanumeric(12);
+        EmailMessage emailMessage = EmailMessage.builder().to(email).subject("TGather 회원가입 인증 메일").message(authCode).build();
+        // kafkaEmailProducer.send(kafkaUserTopicProperties.getMailSendTopic(), emailMessage);
+        return authCode;
     }
 
     /**
-     * 비밀번호 변경
+     * 입력된 정보 확인
      *
-     * @param authentication : 로그인 사용자 정보
-     * @param passwordForm   : 변경할 비밀번호 정보
+     * @param accountSaveForm account 저장 폼
      */
-    public void changePassword(JwtAuthentication authentication, PasswordForm passwordForm) {
-        Account originAccount = accountRepository.findById(authentication.id()).orElseThrow();
-        if (!this.passwordEncoder.matches(passwordForm.getOriginPassword(), originAccount.getPassword())) {
-            throw new BadRequestException("기존 비밀번호가 일치하지 않습니다.");
+    private void validateAccount(AccountSaveForm accountSaveForm) {
+
+        if (validNickname(accountSaveForm.getNickname())) {
+            throw new BadCredentialsException("이미 존재하는 닉네임입니다.");
         }
-        originAccount.changePassword(this.passwordEncoder.encode(passwordForm.getNewPassword()));
+
+        accountRepository.findByEmail(accountSaveForm.getEmail()).ifPresent(account -> {
+            throw new BadCredentialsException("이미 존재하는 이메일입니다.");
+        });
+
     }
 
     /**
-     * 리프레시 토큰으로 토큰 재발행
+     * nickName 중복확인
      *
-     * @param tokenDto : 토큰 정보
+     * @param nickName 닉네임
+     * @return boolean 닉네임 유효값 확인 결과
+     */
+    boolean validNickname(String nickName) {
+        return accountRepository.findByNickname(nickName).isPresent();
+    }
+
+    /**
+     * 사용자 로그인
+     *
+     * @param email      이메일
+     * @param credential 인증
+     * @return AccountDto 계정 Dto
+     */
+    public AccountDto login(String email, CredentialInfo credential) {
+        Account account = accountRepository.findByEmailAndLoginType(email, credential.getLoginType()).orElseThrow(() -> new NotFoundException("등록된 계정이 없습니다."));
+        account.login(passwordEncoder, credential.getCredential());
+        account.afterLoginSuccess();
+        return AccountDto.createByAccountAndGenerateAccessToken(account, jwt);
+    }
+
+    /**
+     * 이메일 인증 확인
+     *
+     * @param authCodeForm 인증 코드 확인 form
+     * @return AccountDto 인증 확인 AccountDto
+     */
+    public AccountDto validAuthCode(AuthCodeForm authCodeForm) {
+        Account account = accountRepository.findByEmailAndLoginType(authCodeForm.getEmail(), LoginType.TGAHTER)
+            .orElseThrow(() -> new NotFoundException("등록된 계정이 없습니다."));
+
+        if (!account.getAuthCode().equals(authCodeForm.getAuthCode())) {
+            throw new BadCredentialsException("인증 코드가 잘못되었습니다. 다시 확인해주세요.");
+        }
+        account.successAuthUser();
+        return AccountDto.createByAccountAndGenerateAccessToken(account, jwt);
+    }
+
+    /**
+     * 토큰 갱신
+     *
+     * @param tokenDto 토큰 갱신 Dto
+     * @return TokenDto 갱신 토큰 결과 Dto
      */
     public TokenDto renewalTokenByRefreshToken(TokenDto tokenDto) {
         if (jwt.validateToken(tokenDto.getRefreshToken())) {
-            Jwt.Claims claims = jwt.verify(tokenDto.getRefreshToken());
-            Account account = accountRepository.findByEmail(claims.getEmail()).orElseThrow();
-            AccountDto accountDto = AccountDto.from(account);
-            accountDto.generateAccessToken(jwt);
-            tokenDto = TokenDto.builder().accessToken(accountDto.getAccessToken()).refreshToken(accountDto.getRefreshToken()).build();
-        } else {
-            throw new ExpiredTokenException();
+            Claims claims = jwt.verify(tokenDto.getRefreshToken());
+            Account account = accountRepository.findByEmailAndLoginType(claims.getEmail(), LoginType.TGAHTER)
+                .orElseThrow(() -> new NotFoundException("이메일을 찾을 수 없습니다."));
+            AccountDto accountDto = AccountDto.createByAccountAndGenerateAccessToken(account, jwt);
+            return TokenDto.builder().accessToken(accountDto.getAccessToken()).refreshToken(accountDto.getRefreshToken()).build();
         }
-        return tokenDto;
-    }
-
-    /**
-     * 프로필 이미지 변경
-     *
-     * @param profileImageForm : 변경용 이미지 정보
-     * @param authentication   : 로그인 사용자
-     */
-    public String changeProfileImage(ProfileImageForm profileImageForm, JwtAuthentication authentication) {
-        Account account = accountRepository.findById(authentication.id()).orElseThrow(NoMemberException::new);
-        account.changeProfileImage(profileImageForm.getProfileImage());
-        return account.getProfileImage();
-    }
-
-    public AccountDto getAccountByAccountId(String accountId) {
-        Account account = accountRepository.findByAccountNo(accountId).orElseThrow(NoMemberException::new);
-        return AccountDto.from(account);
+        throw new ExpiredTokenException();
     }
 
 }

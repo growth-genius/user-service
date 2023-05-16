@@ -1,29 +1,29 @@
 package com.sgyj.userservice.enums;
 
+
 import com.sgyj.userservice.common.EnumMapperType;
 
-public enum AccountRole implements EnumMapperType {
+public enum TravelTheme implements EnumMapperType {
 
-    ADMIN("관리자", false),  // 관리자
-    LEADER("모임장", false), USER("사용자", true),
+    FOOD("먹방", false), HEALING("힐링", true), ACTIVITY("액티비티", false),
     ;
 
-    private final String role;
+    private final String theme;
     private final boolean active;
 
-    AccountRole(String role, boolean active) {
-        this.role = role;
+    TravelTheme(String theme, boolean active) {
+        this.theme = theme;
         this.active = active;
     }
 
     @Override
     public String getCode() {
-        return this.name();
+        return name();
     }
 
     @Override
     public String getTitle() {
-        return this.role;
+        return this.theme;
     }
 
     @Override

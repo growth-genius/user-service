@@ -1,25 +1,17 @@
 package com.sgyj.userservice.controller;
 
-import static com.sgyj.userservice.utils.ApiUtil.success;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sgyj.userservice.annotations.BaseAnnotation;
 import com.sgyj.userservice.dto.AccountDto;
-import com.sgyj.userservice.form.LoginForm;
-import com.sgyj.userservice.form.SignUpForm;
-import com.sgyj.userservice.security.JwtAuthenticationToken;
+import com.sgyj.userservice.form.AccountSaveForm;
+import com.sgyj.userservice.form.AuthCodeForm;
+import com.sgyj.userservice.form.SignInForm;
+import com.sgyj.userservice.security.CredentialInfo;
 import com.sgyj.userservice.service.AccountService;
 import com.sgyj.userservice.utils.ApiUtil;
-import com.sgyj.userservice.utils.ApiUtil.ApiResult;
-import com.sgyj.userservice.validator.SignUpFormValidator;
-import io.micrometer.core.annotation.Timed;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,41 +23,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class AccountController {
 
     private final AccountService accountService;
-    private final SignUpFormValidator signUpFormValidator;
-    private final AuthenticationManager authenticationManager;
 
-
-    @InitBinder("signUpForm")
-    public void initBinder(WebDataBinder webDataBinder) {
-        webDataBinder.addValidators(signUpFormValidator);
-    }
-
-    /**
-     * 회원가입
-     *
-     * @param signUpForm : 회원가입 폼
-     * @return AccountDto
-     */
     @PostMapping("/sign-up")
-    @Timed(value = "account.signUp", longTask = true)
-    public ApiResult<AccountDto> signUp(@Valid @RequestBody SignUpForm signUpForm) {
-        return success(AccountDto.from(accountService.processNewAccount(signUpForm)));
+    public ApiUtil.ApiResult<AccountDto> addUser(@RequestBody @Valid AccountSaveForm accountSaveForm) throws JsonProcessingException {
+        return ApiUtil.success(accountService.saveAccount(accountSaveForm));
     }
 
-    /**
-     * 로그인
-     *
-     * @param loginForm : 로그인 폼
-     * @return AccountDto
-     */
-    @PostMapping("/sign-in")
-    public ApiResult<AccountDto> signIn(@Valid @RequestBody LoginForm loginForm) {
-        return success((AccountDto) authenticationManager.authenticate(new JwtAuthenticationToken(loginForm.getEmail(), loginForm.getPassword())).getDetails());
+    @PostMapping("/check-email")
+    public ApiUtil.ApiResult<AccountDto> authCode(@RequestBody @Valid AuthCodeForm authCodeForm) {
+        return ApiUtil.success(accountService.validAuthCode(authCodeForm));
     }
 
-    @GetMapping("/check-email-token/{token}/{email}")
-    public ApiUtil.ApiResult<Boolean> checkEmailToken(@PathVariable String token, @PathVariable String email) {
-        return success(accountService.checkEmailToken(token, email), "이메일 인증에 성공하였습니다. 로그인을 진행해 주세요.");
+    @PostMapping("/login")
+    public ApiUtil.ApiResult<AccountDto> login(@RequestBody @Valid SignInForm signInForm) {
+        return ApiUtil.success(accountService.login(signInForm.getEmail(), new CredentialInfo(signInForm.getPassword())));
     }
 
 }
